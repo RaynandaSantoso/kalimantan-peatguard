@@ -1,0 +1,11 @@
+earthengine-api
+requests
+numpy
+pandas
+matplotlib
+shapely>=2
+pyproj
+ipykernel
+rasterio
+scipy
+pyarrow
