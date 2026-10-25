@@ -102,8 +102,20 @@ def fetch_tile(image: ee.Image, projection: dict, col: int, row: int,
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--project", required=True)
+    parser.add_argument("--project", help="Required only when acquiring the static source")
+    parser.add_argument("--root")
     args = parser.parse_args()
+    from peatguard.study import load_study
+    from peatguard.spatial import validated_static, atomic_json
+    study = load_study(root=args.root)
+    global OUTPUT
+    OUTPUT = study.root / study.config["sources"]["ghsl"]["directory"]
+    cached = OUTPUT / "ghsl_built_surface_2020_kalimantan_buffered.tif"
+    if cached.exists() or (OUTPUT / "manifest.json").exists():
+        print(f"Reused validated static GHSL 2020: {validated_static(study)}")
+        return
+    if not args.project:
+        parser.error("--project is required for initial acquisition; cached data need no credentials")
     ee.Initialize(project=args.project)
     OUTPUT.mkdir(parents=True, exist_ok=True)
     output = OUTPUT / "ghsl_built_surface_2020_kalimantan_buffered.tif"
@@ -153,6 +165,17 @@ def main() -> None:
                         print(f"GHSL tiles: {int(done.sum())}/{len(tiles)}", flush=True)
         if not done.all():
             raise RuntimeError("GHSL download remains incomplete")
+        # Validate every block before exposing the completed static source.
+        from peatguard.inventory import _raster
+        _raster(partial, study.config["sources"]["ghsl"], {}, {
+            "shape_rows_columns": [height, width], "transform": list(transform)[:6],
+            "crs_wkt": crs.to_wkt(),
+        })
+        # Publish source bytes outside glob discovery. The manifest is the
+        # commit pointer; failed publication leaves a harmless orphan.
+        partitions = OUTPUT / '.partitions'
+        partitions.mkdir(exist_ok=True)
+        output = partitions / f'ghsl_built_surface_2020_{sha256(partial)[:20]}.tif'
         partial.replace(output)
         done_path.unlink()
         print(f"Saved {output} ({output.stat().st_size / 1e6:.1f} MB)", flush=True)
@@ -177,7 +200,8 @@ def main() -> None:
         "sha256": sha256(output),
         "paper_note": "Paper names GHSL but does not specify product, epoch, settlement threshold, or distance metric. This is source/proxy EDA only.",
     }
-    (OUTPUT / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+    manifest["output"] = output.relative_to(study.root).as_posix()
+    atomic_json(OUTPUT / "manifest.json", manifest)
     print("Wrote manifest.json", flush=True)
 
 

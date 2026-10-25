@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "date_convention": "source_day_utc",
+  "target": "same_day_modis_detection_confidence_gt_80",
+  "grid": {
+    "status": "candidate_pending_review",
+    "cell_size_m": 5000,
+    "crs_proj": "+proj=laea +lat_0=0 +lon_0=114 +datum=WGS84 +units=m +no_defs",
+    "lattice_origin_m": [
+      0,
+      0
+    ],
+    "cell_id_rule": "kp5_c{grid_col}_r{grid_row}",
+    "mask_rule": "all_downloaded_BIG_polygons"
+  },
+  "profiles": {
+    "legacy": {
+      "start": "2020-01-01",
+      "end": "2024-12-31",
+      "splits": {
+        "train": [
+          "2020-01-01",
+          "2023-12-31"
+        ],
+        "test": [
+          "2024-01-01",
+          "2024-12-31"
+        ]
+      },
+      "held_out": [
+        "test"
+      ]
+    },
+    "expanded": {
+      "start": "2020-01-01",
+      "end": "2025-12-31",
+      "splits": {
+        "train": [
+          "2020-01-01",
+          "2024-12-31"
+        ],
+        "test": [
+          "2025-01-01",
+          "2025-12-31"
+        ]
+      },
+      "held_out": [
+        "test"
+      ],
+      "final_test_interval_frozen": true
+    }
+  },
+  "sources": {
+    "chirps": {
+      "cadence": "daily",
+      "collection": "UCSB-CHG/CHIRPS/DAILY",
+      "version": "2.0_final",
+      "directory": "data/interim/chirps_v2",
+      "pattern": "chirps_v2_kalimantan_*.npz",
+      "bands": [
+        "precipitation_mm_day"
+      ],
+      "units": [
+        "mm/day"
+      ],
+      "shape": [
+        190,
+        220
+      ],
+      "grid_transform": [
+        0.05,
+        0,
+        108.5,
+        0,
+        -0.05,
+        4.5
+      ]
+    },
+    "era5_land": {
+      "cadence": "daily",
+      "collection": "ECMWF/ERA5_LAND/DAILY_AGGR",
+      "version": "daily_UTC_mean_layer1_0_7cm",
+      "directory": "data/interim/era5_land_daily",
+      "pattern": "era5_land_kalimantan_*.npz",
+      "bands": [
+        "temperature_2m_K",
+        "soil_water_layer1_fraction"
+      ],
+      "units": [
+        "K",
+        "m3/m3"
+      ],
+      "shape": [
+        96,
+        111
+      ],
+      "grid_transform": [
+        0.1,
+        0,
+        108.45,
+        0,
+        -0.1,
+        4.55
+      ]
+    },
+    "modis": {
+      "cadence": "annual",
+      "collection": "MODIS/061/MCD12Q1",
+      "version": "6.1_IGBP",
+      "directory": "data/interim/modis_landcover",
+      "pattern": "modis_mcd12q1_061_kalimantan_*.tif",
+      "bands": [
+        "LC_Type1",
+        "QC",
+        "LW"
+      ]
+    },
+    "ghsl": {
+      "cadence": "static",
+      "collection": "JRC/GHSL/P2023A/GHS_BUILT_S/2020",
+      "version": "R2023A_epoch_2020",
+      "directory": "data/interim/ghsl_built_surface",
+      "pattern": "ghsl_built_surface_2020_kalimantan_buffered.tif",
+      "bands": [
+        "built_surface"
+      ]
+    },
+    "firms": {
+      "cadence": "detections",
+      "collection": "FIRMS_MODIS_C6.1",
+      "version": "MODIS_C6.1_confidence_gt_80",
+      "directory": "data/raw/Firms",
+      "pattern": "**/*.csv"
+    }
+  },
+  "boundaries": {
+    "provinces": "data/raw/boundaries/big_kalimantan_provinces.geojson",
+    "peatland": "data/raw/peatland/big_peta_lahan_gambut_kalimantan.geojson"
+  }
+}

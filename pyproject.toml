@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kalimantan-peatguard"
+version = "0.1.0"
+description = "Shared study configuration and read-only source inventory"
+requires-python = ">=3.10"
+dependencies = ["numpy", "rasterio"]
+
+[tool.setuptools.packages.find]
+include = ["peatguard*"]

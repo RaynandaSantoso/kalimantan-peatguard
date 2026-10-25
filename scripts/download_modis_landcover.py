@@ -81,65 +81,25 @@ def fetch_year(year: int) -> tuple[np.ndarray, rasterio.Affine, dict]:
     raise AssertionError("unreachable")
 
 
-def download_year(year: int) -> dict:
-    result = OUTPUT / f"modis_mcd12q1_061_kalimantan_{year}.tif"
-    if result.exists():
-        print(f"{year}: already saved", flush=True)
-        with rasterio.open(result) as source:
-            shape = [source.height, source.width]
-            transform = list(source.transform)[:6]
-    else:
-        data, affine, projection = fetch_year(year)
-        temporary = result.with_suffix(".tmp.tif")
-        with rasterio.open(
-            temporary, "w", driver="GTiff", width=data.shape[2], height=data.shape[1],
-            count=len(BANDS), dtype="uint8", crs=MODIS_SINUSOIDAL,
-            transform=affine, nodata=None, compress="DEFLATE", tiled=True,
-            blockxsize=256, blockysize=256,
-        ) as destination:
-            destination.write(data)
-            for number, band in enumerate(BANDS, start=1):
-                destination.set_band_description(number, band)
-            destination.update_tags(source_collection=COLLECTION,
-                                    source_image=f"{year}_01_01",
-                                    source_crs=projection["crs"])
-        temporary.replace(result)
-        shape = list(data.shape[1:])
-        transform = list(affine)[:6]
-        print(f"{year}: saved {result} ({result.stat().st_size / 1e6:.1f} MB)", flush=True)
-    return {"year": year, "file": str(result), "shape_lat_lon": shape,
-            "transform": transform, "sha256": sha256(result)}
-
 
 def main() -> None:
+    from peatguard.study import load_study
+    from peatguard.spatial import discover_maps, refresh_maps, select_maps
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--root")
     parser.add_argument("--project", required=True)
-    parser.add_argument("--years", nargs="+", type=int, default=list(range(2020, 2025)))
+    parser.add_argument("--profile", choices=["legacy", "expanded"], default="expanded")
+    parser.add_argument("--start")
+    parser.add_argument("--end", default="latest")
+    parser.add_argument("--as-of")
+    parser.add_argument("--policy", choices=["strict_same_year", "carry_forward"], default="strict_same_year")
+    parser.add_argument("--include-held-out", action="store_true", help="Include held-out years in assignment report")
     args = parser.parse_args()
-    ee.Initialize(project=args.project)
-    OUTPUT.mkdir(parents=True, exist_ok=True)
-    records = [download_year(year) for year in args.years]
-    grids = {(tuple(record["shape_lat_lon"]), tuple(record["transform"])) for record in records}
-    if len(grids) != 1:
-        raise ValueError("MODIS annual grids differ; cannot compare pixelwise")
-    manifest = {
-        "source": "MODIS MCD12Q1 Version 6.1, via Google Earth Engine",
-        "earth_engine_collection": COLLECTION,
-        "earth_engine_project": args.project,
-        "dataset_page": "https://developers.google.com/earth-engine/datasets/catalog/MODIS_061_MCD12Q1",
-        "doi": "10.5067/MODIS/MCD12Q1.061",
-        "requested_bounds_wgs84_wsen": BOUNDS_WGS84,
-        "bands_in_order": BANDS,
-        "band_1_scheme": "IGBP LC_Type1, integer classes 1–17",
-        "crs": "MODIS Sinusoidal sphere radius 6371007.181 m",
-        "native_pixel_size_m": 463.3127165279165,
-        "nodata": "None; LC_Type1 class 17 is water; QC code 0 is valid classified land",
-        "paper_note": "Paper says MODIS Collection 6 Land Cover Type Product but does not specify collection minor version, band/classification scheme, or map year.",
-        "reconstruction_note": "Earth Engine Collection 6.1 LC_Type1 annual maps are retained for EDA; no 5 km resampling or model-year selection yet.",
-        "years": records,
-    }
-    (OUTPUT / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
-    print("Wrote manifest.json", flush=True)
+    study = load_study(root=args.root, profile=args.profile, start=args.start, end=args.end, as_of=args.as_of)
+    available = discover_maps(study, args.project)
+    report = refresh_maps(study, available, fetch_year, policy=args.policy)
+    report["assignments"] = select_maps(study, policy=args.policy, include_held_out=args.include_held_out)
+    print(json.dumps(report, indent=2))
 
 
 if __name__ == "__main__":
