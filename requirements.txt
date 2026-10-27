@@ -9,3 +9,6 @@ ipykernel
 rasterio
 scipy
 pyarrow
+scikit-learn
+xgboost
+seaborn

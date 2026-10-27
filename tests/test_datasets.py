@@ -160,6 +160,50 @@ class DatasetTests(unittest.TestCase):
         self.assertLessEqual(pd.to_datetime(combined.acq_date).max(), pd.Timestamp('2025-12-31'))
         self.assertEqual(contract['descriptor']['held_out_interval'], ['2025-01-01', '2025-12-31'])
 
+        # Exercise the actual notebook export and simple baseline imports. Old
+        # paper-reproduction files must survive the new chronological exports.
+        directory = self.root / 'data/interim/model_table'
+        directory.mkdir(parents=True)
+        legacy = directory / 'train_2020_2023.parquet'
+        legacy.write_bytes(b'preserve original experiment')
+        notebooks = Path(__file__).parents[1]
+        preprocessing = json.loads((notebooks / 'preprocessing.ipynb').read_text())
+        export_cell = next(c for c in preprocessing['cells'] if c.get('id') == 'named-partition-exports')
+        scope = {'ROOT': self.root, 'build_directory': output, 'Path': Path, 'json': json}
+        exec(''.join(export_cell['source']), scope)
+        self.assertEqual(legacy.read_bytes(), b'preserve original experiment')
+        self.assertEqual(sha256(directory / 'train_2024.parquet'), sha256(output / 'train.parquet'))
+        self.assertEqual(sha256(directory / 'test_2025.parquet'), sha256(output / 'test.parquet'))
+        provenance = json.loads((directory / 'prepared_dataset.json').read_text())
+        self.assertEqual(provenance['build_id'], output.name)
+        self.assertEqual(provenance['partitions']['test']['start'], '2025-01-01')
+
+        # The baseline uses full-study filenames; the fixture's training request
+        # deliberately covers only 2024, so supply its explicit equivalent.
+        import shutil
+        shutil.copyfile(directory / 'train_2024.parquet', directory / 'train_2020_2024.parquet')
+        baseline = json.loads((notebooks / 'base_models.ipynb').read_text())
+        for cwd in [self.root, self.root / 'EDA']:
+            cwd.mkdir(exist_ok=True)
+            before = Path.cwd()
+            try:
+                os.chdir(cwd)
+                baseline_scope = {}
+                for cell in baseline['cells'][1:3]:
+                    exec(''.join(cell['source']), baseline_scope)
+            finally:
+                os.chdir(before)
+            self.assertEqual(len(baseline_scope['train']), 2)
+            self.assertEqual(len(baseline_scope['test']), 365)
+            self.assertEqual(baseline_scope['feature_columns'], PREDICTORS)
+
+        # A blocked preparation must not publish stale convenience exports.
+        scope['build_directory'] = None
+        before_hash = sha256(directory / 'test_2025.parquet')
+        exec(''.join(export_cell['source']), scope)
+        self.assertEqual(scope['exported_paths'], {})
+        self.assertEqual(sha256(directory / 'test_2025.parquet'), before_hash)
+
     def test_complete_source_to_partitions_train_only_scaling_and_guarded_loading(self):
         before={p:sha256(p) for p in self.root.rglob('*') if p.is_file()}
         with patch('socket.socket',side_effect=AssertionError('No acquisition')):output=self.build()

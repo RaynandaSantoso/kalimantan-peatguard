@@ -185,6 +185,31 @@ class FirmsTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             read_ledger(self.ledger([source]), self.study)
 
+    def test_notebook_reads_updated_path_after_archive_relocation(self):
+        import contextlib
+        import io
+        item = self.interval('relocated.csv', [self.row()])
+        old = self.root / item['path']
+        new = self.root / 'refresh' / old.name
+        new.parent.mkdir()
+        old.rename(new)
+        ledger = self.ledger([item])
+        with self.assertRaisesRegex(ValueError, 'Missing FIRMS source: .*relocated.csv'):
+            read_ledger(ledger, self.study)
+        item['path'] = str(new.relative_to(self.root))
+        ledger = self.ledger([item])
+        notebook = json.loads((Path(__file__).parents[1] / 'EDA/02_FIRMS_EDA.ipynb').read_text())
+        cell = next(c for c in notebook['cells'] if c['cell_type'] == 'code'
+                    and 'default_ledger = ' in ''.join(c['source']))
+        scope = dict(ROOT=self.root, Path=Path, os=os, json=json, study=self.study,
+                     read_ledger=read_ledger, ingest=ingest,
+                     development={str(d) for d in self.study.development_dates()})
+        with patch.dict(os.environ, {'FIRMS_LEDGER': str(ledger)}), contextlib.redirect_stdout(io.StringIO()):
+            exec(''.join(cell['source']), scope)
+        self.assertEqual(scope['intervals'][0]['path'], str(new))
+        self.assertEqual(len(scope['detections']), 1)
+        self.assertEqual(scope['ingestion_report']['rejected_rows'], 0)
+
     def test_nrt_and_utc_wita_boundary_preserved(self):
         source = self.interval('nrt.csv', [self.row(acq_time='1559',version='6.1NRT'), self.row(acq_time='1600',version='6.1NRT')])
         source['stage'] = 'NRT'

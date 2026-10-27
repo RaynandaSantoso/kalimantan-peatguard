@@ -107,7 +107,7 @@ Preprocessing and baseline setup now use the versioned chronological dataset con
 
 The source scripts support first-time acquisition and explicit later refreshes.
 Available backfill was acquired locally, but data is excluded from Git.
-Complete dataset publication still requires verified FIRMS coverage.
+Complete dataset publication requires verified FIRMS coverage; the maintainer’s local archive evidence is now recorded, but bulk files are excluded from Git.
 
 | Source | Workflow and reproduction guide |
 | --- | --- |
@@ -200,17 +200,18 @@ not silently become negatives or disappear. Coastal fallback limits remain
 
 Completed artifacts live in the profile/study/build directory and preserve old
 `data/interim/model_table/` outputs. `preprocessing.ipynb` retains candidate grid
-generation and calls the shared preparation function. `baseline_models.ipynb`
-loads the explicit `PEATGUARD_BUILD` contract and declared predictors, without
-fitting models or evaluating held-out data.
+generation and calls the shared preparation function. `base_models.ipynb`
+directly imports `train_2020_2024.parquet` and `test_2025.parquet` from
+`data/interim/model_table/`, without fitting or evaluating models. Section 9 of
+preprocessing writes these named copies and their build provenance.
 
-Available 2025/2026 weather data, the 2025 MODIS map, and public FIRMS observations
-are now downloaded. The strict full build still requires verified FIRMS coverage
-for the selected 2020–2025 study interval. Source EDA outputs are refreshed;
-preprocessing/baseline outputs remain cleared until a complete build exists. Credential-free integration fixtures verify the
-source-to-partition path and baseline setup. This remains same-day retrospective
-research; forecast-time availability and daily multi-horizon sequences are
-separate work.
+The local strict build is complete for training **2020–2024** and test **2025**,
+using FIRMS archive requests 814923 and 830638. Named exports contain 6,416,424
+training rows and 1,281,880 test rows, with 21 predictors and no excluded cell/days.
+A fresh clone must acquire the source files and coverage evidence separately.
+`base_models.ipynb` loads both named exports; no model has been trained or scored.
+This remains same-day retrospective research; forecast-time availability and
+multi-horizon sequences are separate work.
 
 ## Actual backfill status — 2026-10-25
 
@@ -220,10 +221,10 @@ MODIS contains the 2025 map. Public FIRMS 2025 country data and a recent 2026
 NRT snapshot are present with unverified label coverage. All six source EDA
 notebooks were regenerated from clean kernels and verified from root and EDA
 contexts. Their ordinary plots cover training years 2020–2024; 2025 is the test year
-and 2026 is outside the active study. Full chronological partition publication remains blocked, as recorded
-in the report. Bulk data and acquisition evidence remain gitignored.
+and 2026 is outside the active study. The report describes an earlier blocked attempt. Subsequent archive evidence
+has enabled strict publication of the current 2020–2024 train / 2025 test dataset. Bulk data and acquisition evidence remain gitignored.
 
 Current research split (updated 2026-10-25): train 2020–2024, test 2025.
 The dated backfill report describes an earlier acquisition snapshot; its
 2026 evaluation envelope has been superseded. The missing 2026 annual map
-is no longer a blocker for this experiment; FIRMS coverage verification remains.
+is outside this experiment. The local FIRMS coverage evidence is now recorded.

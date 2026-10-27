@@ -80,8 +80,10 @@ def read_ledger(path, study):
         item['retrieved_at'] = retrieved.isoformat()
         if item.get('path'):
             file = (path.parent / item['path']).resolve()
-            if not file.is_file() or not item.get('sha256') or sha256(file) != item['sha256']:
-                raise ValueError('Missing source or checksum mismatch; interval cannot validate.')
+            if not file.is_file():
+                raise ValueError(f'Missing FIRMS source: {file}. Restore the file or update its path in {path}.')
+            if not item.get('sha256') or sha256(file) != item['sha256']:
+                raise ValueError(f'FIRMS source checksum mismatch: {file}. Restore the verified source before importing.')
             item['path'] = str(file)
         elif item['status'] == 'complete':
             raise ValueError('Complete intervals require an immutable, checksummed CSV, including empty responses.')
