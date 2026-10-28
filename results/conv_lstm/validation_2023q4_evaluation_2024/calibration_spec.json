@@ -1,0 +1,33 @@
+{
+  "status": "isotonic calibration and separate later-cohort evaluation complete",
+  "experiment": "exploratory calendar-halves calibration; previously viewed 2024 outcomes",
+  "completed_at_utc": "2026-10-28T15:00:06.361595+00:00",
+  "method": "sklearn.isotonic.IsotonicRegression",
+  "out_of_bounds": "clip",
+  "sklearn": "1.9.1",
+  "joblib": "1.6.0",
+  "calibration_fit_interval": [
+    "2024-01-01",
+    "2024-06-30"
+  ],
+  "calibration_evaluation_interval": [
+    "2024-07-01",
+    "2024-12-31"
+  ],
+  "calibration_fit_cell_days": 639184,
+  "calibration_fit_positives": 9,
+  "evaluation_cell_days": 646208,
+  "evaluation_positives": 61,
+  "training_constant_rate": 0.0001268055692504642,
+  "calibration_constant_rate": 1.408045257703572e-05,
+  "raw_predictions_sha256": "0278a9252f98899f944aa9abcca30daba216e67e13c84f811f935aff9036f6a0",
+  "raw_evaluation_spec_sha256": "2aedacaf70df81db8ae3f113454c9795d5878a3d99c0a9a47a5c2c70d19a9a5b",
+  "checkpoint_sha256": "74a06552358914ec02ee288f9e33209e3563913d34917dbb0beddbeb14f6819a",
+  "scaling_sha256": "edca9002731dcc0205de712dbd7e2c9782482a5e1203892715ed5243da2807aa",
+  "artifacts": {
+    "isotonic_jan_jun_2024.joblib": "80fb1ac5565bfe83aa1ec5457afd46d9fa7b728c3549bdd929648338e3f5011e",
+    "calibration_metrics.csv": "0933ecb2ef44b3521ae6309f995a3ae6ff40ffa144b78c3dd84c210575841c1b",
+    "calibration_alert_counts.csv": "39ba30794235aa507797610cc57ed368ed69153e8ecd07d0c008a49a271f7c9d",
+    "calibration_evaluation_jul_dec_2024.parquet": "5bf4f1ae29e988628564b9fc7d58b8a5229594ad37ccf73ba84414849055134b"
+  }
+}

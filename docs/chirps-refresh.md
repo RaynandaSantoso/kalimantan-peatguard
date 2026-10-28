@@ -1,5 +1,7 @@
 # CHIRPS v2 Final: bounded local refresh
 
+This manually invoked workflow is retained to reproduce bounded research inputs. The [completed project](findings.md) does not operate or plan a scheduled ingestion or continuous prediction service.
+
 This path preserves the configured native 0.05° geographic grid and mm/day
 precipitation. It is a source-grid subset, without peat masking or 5 km resampling.
 Dates are source-day UTC, and neither rainfall nor current asset metadata proves

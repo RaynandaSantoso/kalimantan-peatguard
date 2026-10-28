@@ -4,7 +4,9 @@ Access date: **2026-10-25** (Asia/Jakarta). Ticket #7. This assessment distingui
 
 ## Decision
 
-**Keep CHIRPS v2 Final as the existing research baseline while assessing a deliberate, consistent rebuild with one named CHIRPS v3 daily variant.** This is a continuity decision, not a finding that v2 is more accurate. Do not append v3 observations to a v2 training series or silently substitute preliminary for final values.
+The project concluded with CHIRPS v2 and the [recorded research findings](findings.md). This completed assessment is retained as source-selection evidence. The assessment documents the rainfall-source decision used by the completed notebook experiments.
+
+**Keep CHIRPS v2 Final as the existing research baseline for the completed experiment. A rebuild with a named CHIRPS v3 daily variant was not adopted.** This is a continuity decision, not a finding that v2 is more accurate. Do not append v3 observations to a v2 training series or silently substitute preliminary for final values.
 
 CHC says v2 production ends after December 2026; it is not announcing that the rainfall record disappears. CHC encourages transition to v3. Historical v3 data already overlap this project's development years, so migration need not introduce a version boundary between training and test. [CHC v2 notice](https://www.chc.ucsb.edu/data/chirps)
 
@@ -22,11 +24,11 @@ The same README identifies date D with UTC disaggregation approximately 00:00 D�
 
 For comparison, v2 daily uses CFSv2 temporal disaggregation, also with UTC labels and heterogeneous station windows. Its historical same-day daily values do not establish availability at an earlier forecast issue time. [Official v2 daily README](https://data.chc.ucsb.edu/products/CHIRPS-2.0/README-CHIRPS2-Daily.txt)
 
-## Publication timing and live forecasting
+## Publication timing and retrospective input limits
 
 Preliminary v3 is produced two days after each pentad ends; final production is monthly, typically during the third week of the following month. These are expected production schedules, not guaranteed per-file publication timestamps. Preliminary observations should eventually be replaced with final values while preserving revision provenance. [CHC v3 overview](https://www.chc.ucsb.edu/data/chirps3), [archive README](https://data.chc.ucsb.edu/products/CHIRPS/v3.0/README-CHIRPSv3.0.txt)
 
-**Inference for PeatGuard:** neither product supplies tomorrow's observed rainfall. Even preliminary data can be several days behind the issue date. An operational model needs lagged inputs actually available at issue time, or a separately evaluated weather-forecast source with archived issue times. Training on later final observations and serving preliminary or lagged observations changes the input distribution. Migration to v3 alone cannot solve that issue.
+**Implication for these experiments:** both products describe observed rainfall with publication delays. The study uses retrospective same-day inputs and does not establish forecast-time availability. Final and preliminary observations also have different revision and timing properties; changing the rainfall version alone does not establish forecasting capability.
 
 ## Free access and exact identities
 
@@ -86,7 +88,7 @@ Statistics below use **only matched valid pixel-days**. The 120 unmatched observ
 
 **Interpretation:** the two-month total differs from v2 by only about −0.78%, but the daily allocation differs substantially. Similar accumulated amounts do not establish interchangeable daily inputs. Sat is closer to v2 by these daily agreement measures in this sample; v2 is not ground truth, so this is not evidence that sat is more accurate. Both v3 variants have effectively identical accumulated amounts over the complete pentads/months here, consistent with their documented common pentad constraint. The reported correlation is pooled over spatially and temporally dependent pixels; it is not an independent validation statistic.
 
-This is a bounded two-month sample, not a multi-season Kalimantan evaluation. It does not test drought spells across years, local gauges, peat-only features, fire prediction, or issue-time availability. Retain rnl as a sensitivity comparator. For a future migration experiment, **final sat is a provisional first candidate** because of its closer daily agreement here and the provider's use of sat in preliminary production; neither observation authorizes switching or proves that training on final values is safe for serving preliminary data. Extend development-only seasonal/gauge checks before committing to a variant.
+This is a bounded two-month sample, not a multi-season Kalimantan evaluation. It does not test drought spells across years, local gauges, peat-only features, fire prediction, or issue-time availability. Sat showed closer daily agreement with v2 in this sample; that agreement does not establish greater rainfall accuracy or safe substitution of preliminary values for final observations. The completed model experiments retained v2.
 
 ### Alignment actually observed
 
@@ -108,16 +110,8 @@ Results for the checked-in script are stored locally at `data/interim/assessment
 
 The v2 2024 archive SHA-256 was `d99d291f3828d2c282ed8f19cb0c46d8a2d3597c5d238594a0dc0d554431f962`; the province GeoJSON SHA-256 was `18c2a23343c6e0862d15d22835f4a8100bab9e327179e4a0ec72d3717d5420a9`. All five canonical v2 archives, their manifest, study configuration and province file retained their recorded checksums. Live acquisition succeeded, while credential-free fixtures independently cover matched missingness, development-only bounds, grid rejection, immutable source reuse and corrupt-cache detection.
 
-## Migration gate
+## Final source decision
 
-A source switch remains a separate decision. The concrete rebuild path is:
+The completed model experiments use CHIRPS v2 Final throughout. The v3 samples remain isolated assessment artifacts; no v3 adapter, mixed-version training series or v3-trained model is part of the reported results. The comparison showed substantial daily differences despite similar accumulated rainfall, supporting the decision to preserve a consistent source across the study.
 
-1. Preserve the v2 archives/configuration/builds and declare a new rainfall experiment with a named variant, stage, source-day convention and cutoff. Do not edit the existing v2 profile in place.
-2. Add a v3 adapter and inventory schema that explicitly support that variant. The present `CHIRPSArchive` intentionally accepts only v2; changing a collection string alone will fail validation. Use the CHC explicit-final paths or verify the Earth Engine stage policy, retain per-image identifiers and revision checksums, and keep candidate downloads separate.
-3. Acquire **all 2020–2024 training years and the frozen 2025 test year** consistently from that same v3 variant. Check actual published dates and interior gaps. Never splice v3 recent years into v2 training.
-4. Recheck native alignment, missing masks and stable 5 km source mappings using training evidence only. Retain the candidate study mask and fallback limits; explicitly review any eligibility change caused by a new rainfall mask.
-5. Rebuild keyed combined tables and split artifacts under a new preprocessing/build version. Refit ranges on training only, keep the fixed feature/category schema, regenerate development EDA and report exclusions. Old v2 scalers/models are not transferable automatically.
-6. Evaluate daily-timing sensitivity and any model changes using development years only, choose the product/variant, retain the frozen 2025 test calendar and declare the evaluation protocol before opening outcomes. Model training is future authorized work, not an action performed here.
-7. Treat the iOS operational predictor pipeline separately: measure observed release delays, archive actual issue-time inputs and evaluate lagged/forecast weather. Final/reanalysis data available later must not masquerade as inputs available at the historical forecast issue time.
-
-This assessment does not authorize a rainfall source switch. See [dataset preparation](dataset-preparation.md) for current study limits and [the historical acquisition report](data-refresh-2026-10-25-report.md) for backfill evidence.
+See [dataset preparation](dataset-preparation.md) for the study's source contract and [the historical acquisition report](data-refresh-2026-10-25-report.md) for backfill evidence.

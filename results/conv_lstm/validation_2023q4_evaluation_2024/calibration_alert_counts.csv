@@ -1,0 +1,17 @@
+Rule,Threshold,Actual alerts,Found,False alarms,Missed,True negatives,Version
+Fixed 0.5,0.5,7158,22,7136,39,639011,Raw
+Target 100 alerts,0.9740327000617981,100,0,100,61,646047,Raw
+"Target 1,000 alerts",0.8486030697822571,1000,4,996,57,645151,Raw
+"Target 10,000 alerts",0.4455700218677521,10000,27,9973,34,636174,Raw
+Fixed 0.5,0.5,0,0,0,61,646147,Isotonic
+Target 100 alerts,0.0027855155058205128,718,2,716,59,645431,Isotonic
+"Target 1,000 alerts",0.002785515272989869,4201,17,4184,44,641963,Isotonic
+"Target 10,000 alerts",0.00044150109170004725,14850,32,14818,29,631329,Isotonic
+Fixed 0.5,0.5,0,0,0,61,646147,Training-frequency constant
+Target 100 alerts,0.0001268055692504642,646208,61,646147,0,0,Training-frequency constant
+"Target 1,000 alerts",0.0001268055692504642,646208,61,646147,0,0,Training-frequency constant
+"Target 10,000 alerts",0.0001268055692504642,646208,61,646147,0,0,Training-frequency constant
+Fixed 0.5,0.5,0,0,0,61,646147,Calibration-frequency constant
+Target 100 alerts,1.408045257703572e-05,646208,61,646147,0,0,Calibration-frequency constant
+"Target 1,000 alerts",1.408045257703572e-05,646208,61,646147,0,0,Calibration-frequency constant
+"Target 10,000 alerts",1.408045257703572e-05,646208,61,646147,0,0,Calibration-frequency constant

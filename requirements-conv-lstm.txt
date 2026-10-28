@@ -1,0 +1,2 @@
+# Optional neural replication runtime; install in addition to requirements.txt.
+tensorflow>=2.16,<2.22

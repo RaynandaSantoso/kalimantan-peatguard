@@ -1,0 +1,22 @@
+{
+  "fit_interval": [
+    "2020-01-01",
+    "2023-09-30"
+  ],
+  "validation_interval": [
+    "2023-10-01",
+    "2023-12-31"
+  ],
+  "evaluation_interval": [
+    "2024-01-01",
+    "2024-12-31"
+  ],
+  "completed_epochs": 43,
+  "selected_epoch": 23,
+  "best_validation_weighted_loss": 0.1532561331987381,
+  "training_weighted_loss_at_selected_epoch": 0.0191397070884704,
+  "epoch_indexing": "training_history.csv uses zero-based indices; displayed epochs are index + 1",
+  "full_year_refit": false,
+  "calibration_fitted": false,
+  "training_history_note": "The original run was interrupted during epoch 2 and resumed from partial-epoch weights. Some batches were repeated and early-stopping patience restarted."
+}

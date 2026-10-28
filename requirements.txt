@@ -11,4 +11,5 @@ scipy
 pyarrow
 scikit-learn
 xgboost
+lightgbm==4.7.0
 seaborn

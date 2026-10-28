@@ -1,0 +1,4 @@
+Role,Requested cell-days,Scored cell-days,Excluded cell-days,Positive cell-days
+Training,4807928,4786856,21072,607
+Validation,323104,323104,0,332
+Evaluation,1285392,1285392,0,70

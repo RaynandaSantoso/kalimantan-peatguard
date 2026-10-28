@@ -1,0 +1,73 @@
+{
+  "experiment": "validation-selected development model; no full-year refit",
+  "fit_interval": [
+    "2020-01-01",
+    "2023-09-30"
+  ],
+  "validation_interval": [
+    "2023-10-01",
+    "2023-12-31"
+  ],
+  "evaluation_interval": [
+    "2024-01-01",
+    "2024-12-31"
+  ],
+  "selected_epochs": 23,
+  "stopping_epoch": 43,
+  "checkpoint": "data/interim/conv_lstm/20261027T155222671757Z/development_best.weights.h5",
+  "checkpoint_sha256": "74a06552358914ec02ee288f9e33209e3563913d34917dbb0beddbeb14f6819a",
+  "scaling_file": "data/interim/conv_lstm/20261027T155222671757Z/development_scaling/scaling.json",
+  "scaling_sha256": "edca9002731dcc0205de712dbd7e2c9782482a5e1203892715ed5243da2807aa",
+  "source_build": {
+    "build_directory": "data/interim/builds/expanded/ecd7d7818e14dc0b1411/datasets/f4b61ff90f716af77a13ce24",
+    "build_id": "f4b61ff90f716af77a13ce24",
+    "partitions": {
+      "test": {
+        "file": "test_2025.parquet",
+        "sha256": "b349b685be467ac46bb30c04bd8dbb70176fa6b7561c2f1283573cf65d678c44",
+        "rows": 1281880,
+        "start": "2025-01-01",
+        "end": "2025-12-31"
+      },
+      "train": {
+        "file": "train_2020_2024.parquet",
+        "sha256": "bbdee3ca925c62acd82af36033dccc45a2070760f16330d7d040ef4090023ed3",
+        "rows": 6416424,
+        "start": "2020-01-01",
+        "end": "2024-12-31"
+      }
+    }
+  },
+  "sequence_length": 7,
+  "horizon_days": 0,
+  "historical_fire_input": false,
+  "full_year_refit": false,
+  "tensorflow": "2.21.0",
+  "keras": "3.15.1",
+  "status": "raw 2024 evaluation complete; no calibration fitted",
+  "training_constant_rate": 0.0001268055692504642,
+  "specification_sha256_at_evaluation": "90f056768f61a3911267f9b423e4aeab2cc0123f6423578eba4c1a47b3781b31",
+  "predictors": [
+    "precipitation_mm_day_scaled",
+    "temperature_2m_C_scaled",
+    "soil_water_layer1_fraction_scaled",
+    "distance_to_built_m_scaled",
+    "land_cover_1",
+    "land_cover_2",
+    "land_cover_3",
+    "land_cover_4",
+    "land_cover_5",
+    "land_cover_6",
+    "land_cover_7",
+    "land_cover_8",
+    "land_cover_9",
+    "land_cover_10",
+    "land_cover_11",
+    "land_cover_12",
+    "land_cover_13",
+    "land_cover_14",
+    "land_cover_15",
+    "land_cover_16",
+    "land_cover_17"
+  ]
+}

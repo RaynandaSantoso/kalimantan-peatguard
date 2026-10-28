@@ -1,0 +1,5 @@
+Rule,Threshold,Actual alerts,Found,False alarms,Missed,True negatives
+Fixed 0.5,0.5,9228,27,9201,43,1276121
+Target 100 alerts,0.9742705821990967,100,0,100,70,1285222
+"Target 1,000 alerts",0.8661662936210632,1000,4,996,66,1284326
+"Target 10,000 alerts",0.4867244362831116,10000,28,9972,42,1275350

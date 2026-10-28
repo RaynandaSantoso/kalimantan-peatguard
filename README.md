@@ -1,230 +1,90 @@
-# kalimantan-peatguard
-Peatland fire risk monitoring for Kalimantan using ML
+# Kalimantan PeatGuard
 
-## First-time setup
+This learning project reconstructs the CNN–ConvLSTM fire-risk methodology described by Mahdiyasa et al. (2026), compares it with classical ML baselines, and evaluates isotonic probability calibration.
 
-Start with [environment setup and data acquisition](docs/setup.md). Bulk data is
-not included in Git. Weather and raster scripts support historical downloads;
-FIRMS may require authenticated archive exports and verified coverage evidence.
-The two BIG geographic inputs must be supplied separately. The guide explains
-these prerequisites and the current limits on complete dataset reproduction.
+Concerned by peatland fires in Kalimantan, Indonesia, I wanted to explore how machine learning could help us understand fire risk. I came across a research paper on the topic and decided to learn by reconstructing its methodology. This project gave me an opportunity to work with real environmental data, compare models, and understand their practical limitations.
 
-## Read-only study inventory and refresh plan
+**This project is for learning purposes only.**
 
-The shared configuration is in `config/study.json`. Install the local Python
-package once from the repository root after installing the requirements:
+LLM assistance: I used large language models extensively while developing and learning from this project.
 
-```bash
+## What was built
+
+- Source acquisition, validation and six EDA notebooks covering BIG geography, FIRMS detections, CHIRPS rainfall, ERA5-Land weather, MODIS land cover, and GHSL built-up surface.
+- A stable 5,000 m lattice in a local equal-area projection, with 3,512 candidate study cells and explicit boundary/overlap rules.
+- Keyed cell/day datasets, source coverage evidence, training-fitted preprocessing, exclusion reports, checksums and versioned build manifests.
+- Logistic Regression, LightGBM, XGBoost and Random Forest baselines, plus a seven-day spatial-sequence ConvLSTM reconstruction.
+- Evaluation of ranking, Brier error, detection/false-alarm counts and isotonic probability calibration on separate fitting/scoring cohorts.
+
+The local expanded exports contain **6,416,424 training rows (2020–2024)** and **1,281,880 evaluation rows (2025)**, with 21 predictors. Rows are cell-days, not independent fire events. Bulk sources, model tables, prepared neural arrays and checkpoints are excluded from Git.
+
+## Main findings
+
+| Experiment | Recorded finding |
+| --- | --- |
+| Classical models: fit 2020–2024, evaluate 2025 | Random Forest had the highest ROC–AUC (0.847); XGBoost had the highest average precision. None beat the training-frequency constant on Brier error. |
+| Saved ConvLSTM: fit Jan 2020–Sep 2023, select on Oct–Dec 2023, evaluate 2024 | ROC–AUC 0.8780 and average precision 0.002238. At score ≥0.5, it found 27 of 70 positive cell-days with 9,201 false alarms. |
+| ConvLSTM isotonic: fit Jan–Jun 2024, evaluate Jul–Dec 2024 | Brier fell from 0.0124778301 to 0.0000942723, only 0.129% below the calibration-frequency constant. ROC–AUC and average precision decreased. Only nine positives supported fitting. |
+
+These experiments use different training/evaluation cohorts and inputs; they do not establish a controlled architecture superiority result. Both 2024 and 2025 outcomes were inspected, so neither should be presented as a new untouched final test. The large raw-to-calibrated Brier improvement does not establish useful alerts or a robust improvement over a constant prediction.
+
+Read [findings and lessons](docs/findings.md), [the baseline notebook](base_models.ipynb), [the ConvLSTM notebook](cnn_conv_lstm.ipynb), and [the saved ConvLSTM results](results/conv_lstm/validation_2023q4_evaluation_2024/README.md).
+
+## Reproduction and data access
+
+Start with [environment setup and data acquisition](docs/setup.md). A fresh clone needs Earth Engine access, the original BIG geographic inputs or equivalent documented exports, and FIRMS detections with verified export-interval evidence. There is no single command that restores every source or reproduces the original provider snapshot.
+
+```sh
+python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
 .venv/bin/python -m pip install -e . --no-deps
-.venv/bin/python -m peatguard --profile expanded --as-of 2026-10-25
 ```
 
-This prints a JSON plan to the terminal. The default run is entirely local: it
-does not authenticate, contact a provider, download anything, update manifests,
-build labels, or create output directories. It reads and checks existing files,
-including their hashes, array dates/grids/bands and raster metadata/values.
-Existing annual files and manifests remain unchanged. Validation includes
-coastal source masks; it does not imply every model cell has usable features.
-The report's `plan` lists reuse, discovery, missing downloads and blocked
-intervals as appropriate; it never executes those actions.
+Neural training/inference additionally requires `requirements-conv-lstm.txt`. Saved-mode ConvLSTM evaluation requires the local checkpoint and prepared arrays; a fresh clone does not include them. The standalone calibration cell requires the saved raw predictions, evaluation record and matching checkpoint/scaler, but does not load TensorFlow or retrain the network.
 
-To save a report, explicitly redirect the command's output to a local file of
-your choice. To inspect a narrower inclusive interval:
+After acquiring the inputs, run `preprocessing.ipynb` through section 9 or use the [dataset preparation workflow](docs/dataset-preparation.md). Run notebook experiments deliberately: the baseline notebook fits models, while the ConvLSTM notebook defaults to loading its saved run. Raw full-year scores and later-cohort calibration scores have separate scoring support.
 
-```bash
-.venv/bin/python -m peatguard --profile expanded --start 2025-01-01 --end 2025-12-31 --as-of 2026-10-25
-```
+| Guide | Purpose |
+| --- | --- |
+| [Setup](docs/setup.md) | Environment, source prerequisites and notebook execution |
+| [Dataset preparation](docs/dataset-preparation.md) | Coverage, keyed joins, scaling, partitions and build provenance |
+| [CHIRPS](docs/chirps-refresh.md) | Manual bounded rainfall acquisition, resume and revisions |
+| [ERA5-Land](docs/era5-land-refresh.md) | Manual UTC weather acquisition and development EDA |
+| [FIRMS](docs/firms-refresh.md) | Coverage ledgers, normalization and nullable labels |
+| [Spatial sources](docs/spatial-refresh.md) | Annual land cover and the static settlement-distance proxy |
+| [ConvLSTM reconstruction](docs/conv-lstm-replication.md) | Architecture, split, checkpoint, calibration and assumptions |
+| [CHIRPS v3 assessment](docs/chirps-v3-migration-assessment.md) | Completed bounded comparison; v2 retained for this study |
+| [Historical acquisition report](docs/data-refresh-2026-10-25-report.md) | Dated backfill evidence and superseded 2026 design |
 
-Dates are inclusive **source-day UTC** dates for this retrospective research
-profile. An `--as-of` date means the end of that UTC date; a timestamp requires
-an explicit UTC offset. `--end latest` (the default) resolves to the earlier of
-the cutoff's UTC date and the profile's end. An explicit end after the cutoff
-is rejected. Today's requested date is not a claim that today's source data
-have been published. The resolved cutoff and dates are included in the report.
+## Study configuration and local inventory
 
-The profiles are deliberately separate:
+`config/study.json` retains two dataset profiles:
 
-| Profile | Training | Held-out test |
+| Profile | Training partition | Test partition |
 | --- | --- | --- |
 | `legacy` | 2020–2023 | 2024 |
 | `expanded` | 2020–2024 | 2025 |
 
-The active expanded study ends on **2025-12-31**. There is no validation
-split and no 2026 study interval. The full 2025 test calendar is fixed
-(`final_test_interval_frozen: true`). Development EDA and default model
-loading use training dates only; test outcomes require explicit access.
-Previously downloaded 2026 source files remain stored for future work and
-are outside this experiment. A retrieval timestamp in 2026 records when a
-file was obtained; it does not put 2026 observations into the study.
+These are dataset partition definitions. The ConvLSTM notebook makes its own documented training/validation split within the earlier years. The fixed 2025 test calendar remains in configuration; its outcomes have already been evaluated by the classical baseline notebook. Default source EDA and guarded loading still expose training only. The baseline notebook explicitly reads both named partitions.
 
-Each report has a profile-specific study ID derived from the configuration,
-resolved dates and cutoff, and a separate reserved build directory. Future
-consumers can use `require_compatible()` to reject mixed profiles/builds. This
-command does not migrate the old model tables or change the legacy baseline
-notebook; the versioned preparation task will wire those consumers to the new
-contract. The existing tables remain retrospective same-day research data.
+The study ends on **2025-12-31**. Downloaded 2026 source files are retained historical artifacts outside the completed experiment. A 2026 retrieval timestamp does not put 2026 observations into the study.
 
-Provider availability is **unknown** in the default local report. To query
-current Earth Engine asset dates without downloading imagery, opt in:
-
-```bash
-.venv/bin/python -m peatguard --as-of 2026-10-25 --discover --project YOUR_PROJECT_ID
+```sh
+.venv/bin/python -m peatguard --profile expanded --as-of 2026-10-25
 ```
 
-The optional discovery uses your existing Earth Engine authentication and
-reports initialization or access failures without emitting credential values.
-It distinguishes source interior gaps, unpublished tails, and published dates
-not yet available locally. Asset dates discovered now do not prove that the
-same data were available at a historical forecast cutoff. Discovery does not
-infer FIRMS archive coverage or change annual map assignment. A captured
-availability object can also be supplied with `--availability FILE`; its
-`sources` entries use the configured source key, `status: "discovered"`, the
-matching `collection`, and a list of ISO `dates`. The inventory's individual
-source sections expose the corresponding published ranges/map years.
+The default inventory command is local and read-only: it checks existing source files and prints a JSON report without fetching data, preparing labels, training, or updating manifests. Its refresh plan is diagnostic output, not an executing scheduler. `--as-of` bounds source-day UTC dates; it does not recreate an archived provider catalog. Optional `--discover --project YOUR_PROJECT` queries current Earth Engine asset dates. First/last FIRMS detections alone do not prove retrieval coverage; the separate ingestion/preparation workflow consumes interval ledgers.
 
-The local FIRMS CSV is recognized and checked structurally, but its first/last
-detection dates cannot prove its requested export interval. The raw inventory alone does not consume interval ledgers; daily coverage and
-label eligibility remain unknown there. Use the FIRMS workflow below to establish coverage;
-missing retrieval must never become a negative fire label. Missing source files,
-invalid manifests, checksum mismatches and malformed data appear in diagnostics.
-Credential hints only indicate whether setup appears present, not whether
-access works. No secret values are included. Use free access only; this task
-does not provision paid infrastructure or run automatic training.
+## Validation and limitations
 
-Run the credential-free integration checks from the repository root:
-
-```bash
+```sh
 .venv/bin/python -m unittest discover -s tests -v
 ```
 
-All six source EDA notebooks now use the shared root resolver and can run from
-both the root and `EDA/` after editable installation. Source EDA defaults to
-configured development periods and reports missing/partial coverage explicitly.
-Preprocessing and baseline setup now use the versioned chronological dataset contract described below.
+The suite includes credential-free fixtures for source validation, refresh recovery, geographic alignment, dataset leakage boundaries, neural smoke checks and standalone calibration. Neural checks require TensorFlow. The last full local run on 2026-10-28 ran 100 tests: 99 passed and one existing dataset/notebook integration test errored because it executes a Markdown cell after a baseline notebook layout change. This documentation update does not repair that test or claim a clean suite.
 
-## Bounded source refresh workflows
+The BIG peatland mask remains a candidate pending scientific review. Source proxies, same-year annual maps, seven-day sequence length, same-day timing, loss and training choices limit exact reproduction of the paper. Satellite non-detection does not prove fire absence. Sparse positives, spatial/temporal dependence, seasonal differences and previously viewed evaluation outcomes limit generalization claims. Detailed evidence and interpretation are in [the findings report](docs/findings.md).
 
-The source scripts support first-time acquisition and explicit later refreshes.
-Available backfill was acquired locally, but data is excluded from Git.
-Complete dataset publication requires verified FIRMS coverage; the maintainer’s local archive evidence is now recorded, but bulk files are excluded from Git.
+## Reference
 
-| Source | Workflow and reproduction guide |
-| --- | --- |
-| CHIRPS v2 Final | [Bounded acquisition, resume, revisions and partial-period rainfall EDA](docs/chirps-refresh.md) |
-| ERA5-Land | [UTC daily temperature/soil water, atomic refresh and development EDA](docs/era5-land-refresh.md) |
-| FIRMS MODIS C6.1 | [Free API/archive import, declared coverage, deduplication and nullable daily labels](docs/firms-refresh.md) |
-| MODIS / GHSL | [Discovered annual maps, strict/carry-forward policies and static 2020 features](docs/spatial-refresh.md) |
-
-Earth Engine access and a FIRMS MAP_KEY must be configured locally for live
-acquisition. Credential-free tests use small provider fixtures. No paid hosting
-or automatic training is introduced. Authenticated provider smoke tests remain
-required before the full backfill. Existing sources and legacy generated tables
-are preserved; refreshed manifests identify active data versions.
-
-## Preprocessing: candidate 5 km study grid
-
-Run `preprocessing.ipynb` from the repository root with the project environment
-after downloading the source data. This is the working preprocessing pipeline.
-It reads the existing BIG province and peatland GeoJSON files under
-`data/raw/boundaries/` and `data/raw/peatland/`, builds full 5,000 m squares in
-a local equal-area projection, and flags intersections with the dissolved BIG
-layer inside the five provinces. All 146 downloaded BIG polygons are included
-as a candidate mask; their classification remains subject to review.
-
-The notebook explains the projection, fixed lattice origin, stable cell IDs,
-boundary-cell rule, and overlap fractions. It validates geometry and area
-coverage, then saves a CSV, WGS84 GeoJSON, overview/close-up PNG, and source-hashed
-manifest under `data/interim/study_grid_5km/` (excluded from Git). It then
-calls the shared preparation workflow for validated FIRMS labels, keyed weather
-joins, annual classes, static distances and chronological exports. Review the grid map and mask against the
-paper before adopting the resulting candidate dataset. The projection and
-inclusion rules are documented reconstruction choices.
-
-## Reproduce the dataset EDA
-
-The notebooks inspect configured development periods for daily rainfall, air temperature, modeled surface soil water, annual land cover, and static GHSL built-up surface. The commands below reproduce the legacy source interval; see the bounded refresh guides above for expanded data. Downloaded data and their generated manifests are kept under `data/interim/` and excluded from Git. The scripts reproduce them.
-
-```bash
-python3 -m venv .venv
-.venv/bin/python -m pip install -r requirements.txt
-.venv/bin/python -m pip install -e . --no-deps
-.venv/bin/earthengine authenticate
-.venv/bin/python scripts/download_chirps_v2.py --project kalimantan-peat --profile legacy --end 2024-12-31
-.venv/bin/python scripts/download_era5_land_daily.py --project kalimantan-peat --profile legacy --end 2024-12-31
-.venv/bin/python scripts/download_modis_landcover.py --project kalimantan-peat --profile legacy --end 2024-12-31
-.venv/bin/python scripts/download_ghsl_built_surface.py --project kalimantan-peat
-```
-
-On macOS, XGBoost also needs the OpenMP runtime. If its import reports a missing
-`libomp.dylib`, install it with `brew install libomp`, then restart the notebook
-kernel.
-
-The project ID must be an Earth Engine-enabled Google Cloud project accessible to your account. Open the CHIRPS, ERA5-Land, MODIS and GHSL notebooks under `EDA/` with the repository root as their working directory after downloading. The CHIRPS, ERA5-Land, and GHSL scripts can resume from checkpoints if interrupted.
-
-The ERA5-Land reconstruction uses daily UTC means of `temperature_2m` and `volumetric_soil_water_layer_1` (0–7 cm). The source paper names ERA5-Land at daily resolution but does not specify its exact bands, depth, daily statistic, or time zone. The preprocessing notebook assigns these values to the 5 × 5 km study cells using its documented nearest-source rule.
-
-The MODIS reconstruction uses annual MCD12Q1 Version 6.1 `LC_Type1` (IGBP) maps, with `QC` and `LW` for quality checks. The paper does not identify its exact MODIS version, classification scheme, or map year. See the [spatial source guide](docs/spatial-refresh.md) for these choices and their limits.
-
-The GHSL EDA uses the 2020 GHS-BUILT-S R2023A built-up surface product. It compares several tentative definitions of a settlement; the paper does not identify its GHSL layer, settlement threshold, or distance algorithm. No exploratory distance has been adopted as the final model feature.
-
-## CHIRPS v3 migration assessment
-
-Ticket #7 is complete: [assessment and reproduction](docs/chirps-v3-migration-assessment.md).
-A bounded January–February 2024 comparison acquired both v3 daily variants
-separately and compared matched provincial pixel-days against the local v2
-archive. Similar accumulated rainfall conceals substantial daily differences.
-The current experiment remains v2; a future source switch requires a consistent
-all-years rebuild and a separate decision. Ticket #8 has now acquired available data; see the coverage report below for residual blocks.
-
-## Chronological dataset preparation
-
-Ticket #6 replaces fixed-year, order-dependent preparation with one local build
-from validated source inventories and declared FIRMS interval evidence:
-
-```bash
-.venv/bin/python scripts/prepare_dataset.py --profile expanded --as-of 2026-10-25 --ledger data/raw/Firms/your-export/intervals.json
-```
-
-The default expanded preparation creates training 2020–2024 and the fixed
-2025 test partition, with preprocessing fitted on training rows only.
-The test partition stays closed during development loading and EDA.
-Explicit held-out boundaries, when supplied, must lie within 2025.
-
-See [dataset preparation and contract](docs/dataset-preparation.md) for strict
-coverage versus explicit exclusions, annual map policies, training-only scaling,
-fixed IGBP 1–17 vocabulary, source mappings, build provenance and failure recovery.
-Unknown labels and missing features remain in keyed exclusion reports; they do
-not silently become negatives or disappear. Coastal fallback limits remain
-10 km for CHIRPS and 20 km for ERA5-Land.
-
-Completed artifacts live in the profile/study/build directory and preserve old
-`data/interim/model_table/` outputs. `preprocessing.ipynb` retains candidate grid
-generation and calls the shared preparation function. `base_models.ipynb`
-directly imports `train_2020_2024.parquet` and `test_2025.parquet` from
-`data/interim/model_table/`, without fitting or evaluating models. Section 9 of
-preprocessing writes these named copies and their build provenance.
-
-The local strict build is complete for training **2020–2024** and test **2025**,
-using FIRMS archive requests 814923 and 830638. Named exports contain 6,416,424
-training rows and 1,281,880 test rows, with 21 predictors and no excluded cell/days.
-A fresh clone must acquire the source files and coverage evidence separately.
-`base_models.ipynb` loads both named exports; no model has been trained or scored.
-This remains same-day retrospective research; forecast-time availability and
-multi-horizon sequences are separate work.
-
-## Actual backfill status — 2026-10-25
-
-[Coverage, verification and remaining blocks](docs/data-refresh-2026-10-25-report.md).
-CHIRPS and ERA5-Land contain all 365 days of 2025 plus available 2026 dates;
-MODIS contains the 2025 map. Public FIRMS 2025 country data and a recent 2026
-NRT snapshot are present with unverified label coverage. All six source EDA
-notebooks were regenerated from clean kernels and verified from root and EDA
-contexts. Their ordinary plots cover training years 2020–2024; 2025 is the test year
-and 2026 is outside the active study. The report describes an earlier blocked attempt. Subsequent archive evidence
-has enabled strict publication of the current 2020–2024 train / 2025 test dataset. Bulk data and acquisition evidence remain gitignored.
-
-Current research split (updated 2026-10-25): train 2020–2024, test 2025.
-The dated backfill report describes an earlier acquisition snapshot; its
-2026 evaluation envelope has been superseded. The missing 2026 annual map
-is outside this experiment. The local FIRMS coverage evidence is now recorded.
+Mahdiyasa et al., *A Calibrated Spatio-Temporal Machine Learning Model for Tropical Peatland Fire Risk*, DOI [10.1016/j.nhres.2026.07.007](https://doi.org/10.1016/j.nhres.2026.07.007). The local paper is `papers/mahdiyasa2026.pdf`. This repository documents a methodological reconstruction and its deviations; it does not claim exact numerical reproduction.

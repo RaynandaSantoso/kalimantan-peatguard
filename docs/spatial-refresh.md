@@ -1,5 +1,7 @@
 # Annual maps and the static settlement proxy
 
+These commands reproduce the completed study's spatial inputs on explicit invocation. They are not a scheduled refresh service; see [findings and final scope](findings.md).
+
 See [first-time setup](setup.md) for authentication, historical acquisition and the required BIG files. Use the shared study configuration after installing this repository editable (`python -m pip install -e . --no-deps`) in the existing environment. Commands work from the repository and its EDA directory. Earth Engine requires your existing free access and project for provider discovery/acquisition. Do not put credentials in configuration or source control.
 
 ```sh

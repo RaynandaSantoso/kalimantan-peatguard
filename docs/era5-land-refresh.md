@@ -1,5 +1,7 @@
 # ERA5-Land refresh and development EDA
 
+This manual acquisition workflow is retained for [research reproduction](setup.md). The project experiments are concluded; scheduled ingestion and a continuously updated prediction service are outside the [final scope](findings.md).
+
 The refresh downloads discovered dates missing locally, including a first-time historical acquisition, or dates in an explicitly selected revision interval. Existing validated annual files are reused. Run the command explicitly; no scheduled update is configured. The expanded study covers 2020–2025, with training 2020–2024 and held-out test 2025. See [first-time setup](setup.md).
 
 Install the local package once from the repository root:
@@ -34,7 +36,7 @@ Acquisition proceeds in at most seven-day contiguous groups. Each checkpoint is 
 
 New annual partitions are written, validated and promoted into `.partitions/` with content-addressed filenames. Only after all selected dates succeed does an atomic manifest replacement expose them. Earlier files are retained, and superseded paths are recorded in `retired_files`. An interruption may leave unreferenced files or valid checkpoints; the previous manifest and referenced source bytes remain usable. Do not load files by globbing all historical replacements. A `.refresh.lock` prevents concurrent writers; after an abrupt process termination, verify that no writer is active before removing a stale lock. Data and commit files must remain on the same local filesystem for atomic replacement.
 
-Each committed request appends its study/cutoff/discovery and retrieval provenance in `runs`. Changed revision values append exact dates and old/new hashes in `revisions`; `downstream_invalidation` lists source hashes whose derived builds must be treated as stale by the later build workflow. No existing model table is automatically overwritten by this ticket. Unchanged repeats do not rewrite manifests or source files. A new request may extend coverage without claiming that the source is immutable.
+Each committed request appends its study/cutoff/discovery and retrieval provenance in `runs`. Changed revision values append exact dates and old/new hashes in `revisions`; `downstream_invalidation` lists source hashes whose derived builds must be treated as stale by the dataset preparation workflow. The refresh does not automatically overwrite model tables. Unchanged repeats do not rewrite manifests or source files. A new request may extend coverage without claiming that the source is immutable.
 
 ## Validation and interpretation
 
@@ -46,7 +48,7 @@ The ERA5 EDA uses the shared root resolver and runs from the repository root or 
 
 Run EDA in a clean project kernel after acquiring the training sources. A missing development archive raises a refresh instruction. The dated acquisition report records earlier verification; it is not a claim that a fresh clone contains those files.
 
-The [Earth Engine ERA5-Land catalog](https://developers.google.com/earth-engine/datasets/catalog/ECMWF_ERA5_LAND_DAILY_AGGR) documents hourly means for these non-flow bands, kelvin and layer-1 volume fraction. Its availability metadata and summary can differ; query actual assets. Publication delay and later reanalysis revisions mean this retrospective source is not an immediately available forecast input. Neither a source day nor retrieval time proves availability at a historical forecast issue cutoff. Choosing authentic available predictors for a WITA next-day forecast remains separate work. Band/depth/UTC choices are local reconstruction assumptions where Mahdiyasa et al. do not specify them.
+The [Earth Engine ERA5-Land catalog](https://developers.google.com/earth-engine/datasets/catalog/ECMWF_ERA5_LAND_DAILY_AGGR) documents hourly means for these non-flow bands, kelvin and layer-1 volume fraction. Its availability metadata and summary can differ; query actual assets. Publication delay and later reanalysis revisions mean this retrospective source is not an immediately available forecast input. Neither a source day nor retrieval time proves availability at a historical forecast issue cutoff. The study did not evaluate predictors available at issue time for a WITA next-day forecast; such forecasting is outside the completed scope. Band/depth/UTC choices are local reconstruction assumptions where Mahdiyasa et al. do not specify them.
 
 ## Verification
 
